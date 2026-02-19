@@ -10,7 +10,7 @@ This project demonstrates real-world data engineering concepts such as ETL proce
 The purpose of this project is to design and implement a complete data warehouse system that converts unstructured operational data into meaningful business insights.
 
 Key goals:
-- Practice data warehouse architecture
+- Data warehouse architecture
 - Implement ETL using SQL
 - Clean and standardize raw datasets
 - Build fact and dimension tables
