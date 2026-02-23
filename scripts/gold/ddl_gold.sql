@@ -1,95 +1,138 @@
 /*
 ===============================================================================
-DDL Script: Create Gold Views
+DDL Script: Create Gold Tables
 ===============================================================================
 Script Purpose:
-    This script creates views for the Gold layer in the data warehouse. 
-    The Gold layer represents the final dimension and fact tables (Star Schema)
+    This script creates physical tables for the Gold layer in the data warehouse.
+    The Gold layer represents the final dimension and fact tables (Star Schema).
 
-    Each view performs transformations and combines data from the Silver layer 
-    to produce a clean, enriched, and business-ready dataset.
+    Unlike views, these are materialized tables designed for:
+        - Performance optimization
+        - Indexing strategy
+        - Power BI integration
+        - Production-style analytics workloads
+
+    This script also creates necessary indexes to improve query performance.
 
 Usage:
-    - These views can be queried directly for analytics and reporting.
+    - Execute after Silver layer is created.
+    - Data loading should be handled via stored procedure (proc_load_gold.sql).
 ===============================================================================
 */
 
 -- =============================================================================
--- Create Dimension: gold.dim_customers
+-- Drop Existing Objects (If Any)
 -- =============================================================================
-IF OBJECT_ID('gold.dim_customers', 'V') IS NOT NULL
-    DROP VIEW gold.dim_customers;
+
+IF OBJECT_ID('gold.fact_sales', 'U') IS NOT NULL
+    DROP TABLE gold.fact_sales;
 GO
 
-CREATE VIEW gold.dim_customers AS
-SELECT
-    ROW_NUMBER() OVER (ORDER BY cst_id) AS customer_key, -- Surrogate key
-    ci.cst_id                          AS customer_id,
-    ci.cst_key                         AS customer_number,
-    ci.cst_firstname                   AS first_name,
-    ci.cst_lastname                    AS last_name,
-    la.cntry                           AS country,
-    ci.cst_marital_status              AS marital_status,
-    CASE 
-        WHEN ci.cst_gndr != 'n/a' THEN ci.cst_gndr -- CRM is the primary source for gender
-        ELSE COALESCE(ca.gen, 'n/a')  			   -- Fallback to ERP data
-    END                                AS gender,
-    ca.bdate                           AS birthdate,
-    ci.cst_create_date                 AS create_date
-FROM silver.crm_cust_info ci
-LEFT JOIN silver.erp_cust_az12 ca
-    ON ci.cst_key = ca.cid
-LEFT JOIN silver.erp_loc_a101 la
-    ON ci.cst_key = la.cid;
+IF OBJECT_ID('gold.dim_products', 'U') IS NOT NULL
+    DROP TABLE gold.dim_products;
 GO
 
--- =============================================================================
--- Create Dimension: gold.dim_products
--- =============================================================================
-IF OBJECT_ID('gold.dim_products', 'V') IS NOT NULL
-    DROP VIEW gold.dim_products;
+IF OBJECT_ID('gold.dim_customers', 'U') IS NOT NULL
+    DROP TABLE gold.dim_customers;
 GO
 
-CREATE VIEW gold.dim_products AS
-SELECT
-    ROW_NUMBER() OVER (ORDER BY pn.prd_start_dt, pn.prd_key) AS product_key, -- Surrogate key
-    pn.prd_id       AS product_id,
-    pn.prd_key      AS product_number,
-    pn.prd_nm       AS product_name,
-    pn.cat_id       AS category_id,
-    pc.cat          AS category,
-    pc.subcat       AS subcategory,
-    pc.maintenance  AS maintenance,
-    pn.prd_cost     AS cost,
-    pn.prd_line     AS product_line,
-    pn.prd_start_dt AS start_date
-FROM silver.crm_prd_info pn
-LEFT JOIN silver.erp_px_cat_g1v2 pc
-    ON pn.cat_id = pc.id
-WHERE pn.prd_end_dt IS NULL; -- Filter out all historical data
+
+-- =============================================================================
+-- Create Dimension Table: gold.dim_customers
+-- =============================================================================
+CREATE TABLE gold.dim_customers (
+    customer_key     INT IDENTITY(1,1) PRIMARY KEY,   -- Surrogate Key
+    customer_id      INT,
+    customer_number  NVARCHAR(50),
+    first_name       NVARCHAR(100),
+    last_name        NVARCHAR(100),
+    country          NVARCHAR(100),
+    marital_status   NVARCHAR(50),
+    gender           NVARCHAR(10),
+    birthdate        DATE,
+    create_date      DATE
+);
 GO
+
+
+-- =============================================================================
+-- Create Dimension Table: gold.dim_products
+-- =============================================================================
+CREATE TABLE gold.dim_products (
+    product_key     INT IDENTITY(1,1) PRIMARY KEY,    -- Surrogate Key
+    product_id      INT,
+    product_number  NVARCHAR(50),
+    product_name    NVARCHAR(100),
+    category_id     NVARCHAR(50),
+    category        NVARCHAR(100),
+    subcategory     NVARCHAR(100),
+    maintenance     NVARCHAR(50),
+    cost            DECIMAL(10,2),
+    product_line    NVARCHAR(50),
+    start_date      DATE
+);
+GO
+
 
 -- =============================================================================
 -- Create Fact Table: gold.fact_sales
 -- =============================================================================
-IF OBJECT_ID('gold.fact_sales', 'V') IS NOT NULL
-    DROP VIEW gold.fact_sales;
+CREATE TABLE gold.fact_sales (
+    order_number   NVARCHAR(50),
+    product_key    INT,
+    customer_key   INT,
+    order_date     DATE,
+    shipping_date  DATE,
+    due_date       DATE,
+    sales_amount   DECIMAL(18,2),
+    quantity       INT,
+    price          DECIMAL(18,2)
+);
 GO
 
-CREATE VIEW gold.fact_sales AS
-SELECT
-    sd.sls_ord_num  AS order_number,
-    pr.product_key  AS product_key,
-    cu.customer_key AS customer_key,
-    sd.sls_order_dt AS order_date,
-    sd.sls_ship_dt  AS shipping_date,
-    sd.sls_due_dt   AS due_date,
-    sd.sls_sales    AS sales_amount,
-    sd.sls_quantity AS quantity,
-    sd.sls_price    AS price
-FROM silver.crm_sales_details sd
-LEFT JOIN gold.dim_products pr
-    ON sd.sls_prd_key = pr.product_number
-LEFT JOIN gold.dim_customers cu
-    ON sd.sls_cust_id = cu.customer_id;
+
+-- =============================================================================
+-- Create Foreign Key Constraints
+-- =============================================================================
+ALTER TABLE gold.fact_sales
+ADD CONSTRAINT fk_fact_customer
+FOREIGN KEY (customer_key)
+REFERENCES gold.dim_customers(customer_key);
 GO
+
+ALTER TABLE gold.fact_sales
+ADD CONSTRAINT fk_fact_product
+FOREIGN KEY (product_key)
+REFERENCES gold.dim_products(product_key);
+GO
+
+
+-- =============================================================================
+-- Create Indexes on Fact Table
+-- =============================================================================
+
+-- Index on foreign keys
+CREATE INDEX idx_fact_customer
+ON gold.fact_sales(customer_key);
+GO
+
+CREATE INDEX idx_fact_product
+ON gold.fact_sales(product_key);
+GO
+
+-- Index on date column
+CREATE INDEX idx_fact_order_date
+ON gold.fact_sales(order_date);
+GO
+
+-- Covering Index for analytical queries
+CREATE INDEX idx_orderdate_cover
+ON gold.fact_sales(order_date)
+INCLUDE (sales_amount, quantity, price, product_key, customer_key);
+GO
+
+/*
+===============================================================================
+End of Gold Layer DDL Script
+===============================================================================
+*/
