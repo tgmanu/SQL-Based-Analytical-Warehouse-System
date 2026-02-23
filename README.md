@@ -137,7 +137,6 @@ Through the design and enhancement of this SQL-Based Analytical Warehouse System
 - Partitioning strategy for large fact tables
 
 ---
-Power BI integration for dashboarding
 ## 🎯 Purpose of the Project
 This project was built as a hands-on learning exercise to understand practical data engineering workflows and strengthen SQL skills required for data analytics and data engineering roles.
 
