@@ -149,5 +149,5 @@ The implementation, structure, and documentation were written independently for 
 ---
 
 ## 👨‍💻 Author
-Manu TG  
+TG Manu  
 Aspiring Data Analyst | Learning SQL, Python & Data Analytics
