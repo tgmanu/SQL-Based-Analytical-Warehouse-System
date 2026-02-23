@@ -1,92 +1,78 @@
-# SQL-Based-Analytical-Warehouse-System
+# 📊 SQL-Based Analytical Warehouse System
 
-An end-to-end SQL Data Warehouse project that transforms raw business data into structured analytical data for decision-making.
+## 📌 Project Overview
 
-This project demonstrates real-world data engineering concepts such as ETL processing, layered architecture, dimensional modeling, and analytical querying using SQL.
+This project implements a structured, multi-layer SQL-based Data Warehouse system using a Bronze → Silver → Gold architecture.
 
----
-
-## 🚀 Project Objective
-The purpose of this project is to design and implement a complete data warehouse system that converts unstructured operational data into meaningful business insights.
-
-Key goals:
-- Data warehouse architecture
-- Implement ETL using SQL
-- Clean and standardize raw datasets
-- Build fact and dimension tables
-- Generate analytical reports for decision making
+The system is designed to simulate a real-world analytical data warehouse used for business intelligence and reporting.
 
 ---
 
-## 🏗️ Architecture
+## 🏗 Architecture
 
-The warehouse follows a **multi-layer architecture**:
+### 🔹 Bronze Layer
+- Raw source data ingestion
+- Minimal transformations
+- Serves as staging layer
 
-### 1️⃣ Raw Layer (Bronze)
-- Stores source data without modification
-- Acts as historical backup
-- Used for traceability
+### 🔹 Silver Layer
+- Cleaned and standardized data
+- Business rule application
+- Stored procedures used for controlled loading
 
-### 2️⃣ Processed Layer (Silver)
-- Data cleaning and transformation
-- Handles null values, duplicates, formatting
-- Standardizes columns and data types
-
-### 3️⃣ Analytics Layer (Gold)
-- Optimized for reporting
-- Fact and Dimension tables created
-- Ready for business intelligence queries
+### 🔹 Gold Layer (Star Schema)
+- Materialized dimension and fact tables
+- Optimized for analytics and BI tools
+- Indexed for performance optimization
 
 ---
 
-## 🧰 Technologies Used
-- SQL (MySQL / SQL Server / PostgreSQL)
-- Data Modeling
-- ETL Techniques
-- Relational Database Concepts
+## ⭐ Gold Layer Design
+
+The Gold layer follows a **Star Schema architecture**:
+
+- `dim_customers`
+- `dim_products`
+- `fact_sales`
+
+### Key Improvements Made:
+
+✔ Converted views into physical tables  
+✔ Implemented surrogate keys using IDENTITY  
+✔ Added foreign key constraints  
+✔ Created non-clustered indexes on:
+  - customer_key
+  - product_key
+  - order_date  
+✔ Implemented covering index for analytical queries  
+✔ Validated performance using Execution Plans  
 
 ---
 
-## 📂 Project Workflow
-1. Import raw CSV datasets into database
-2. Clean and transform the data
-3. Create relational schema
-4. Build fact and dimension tables
-5. Perform analytical queries
-6. Generate business insights
+## ⚡ Performance Optimization
+
+Performance was tested using:
+
+- `SET STATISTICS IO ON`
+- `SET STATISTICS TIME ON`
+- Execution Plan Analysis
+
+### Observations:
+- Initial queries resulted in Table Scans
+- After indexing, selective queries used **Index Seek**
+- Covering index eliminated key lookups for analytical workloads
 
 ---
 
-## 📊 Example Insights
-- Top selling products
-- Monthly revenue trends
-- Customer purchasing patterns
-- Category performance analysis
-- Sales contribution by region
+## 🔄 ETL Design
 
----
+Each layer includes:
 
-## 🧠 Skills Demonstrated
-- Data Cleaning using SQL
-- Joins and Aggregations
-- Window Functions
-- CTEs and Subqueries
-- Dimensional Modeling (Star Schema)
-- Analytical Query Writing
+- DDL scripts
+- Stored procedures for loading
+- Re-runnable architecture
 
----
+Gold layer is loaded using:
 
-## 🎯 Purpose of the Project
-This project was built as a hands-on learning exercise to understand practical data engineering workflows and strengthen SQL skills required for data analytics and data engineering roles.
-
----
-
-## 📌 Note
-Inspired by learning resources from the **DataWithBaraa** YouTube channel.  
-The implementation, structure, and documentation were written independently for educational purposes.
-
----
-
-## 👨‍💻 Author
-TG Manu  
-Aspiring Data Analyst | Learning SQL, Python & Data Analytics
+```sql
+EXEC gold.proc_load_gold;
