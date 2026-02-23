@@ -63,26 +63,24 @@ The warehouse follows a **multi-layer architecture**:
 
 Unlike the reference implementation which used views, this version includes:
 
-✔ Conversion of views into physical tables  
-✔ Surrogate keys implemented using `IDENTITY`  
-✔ Foreign key constraints for referential integrity  
-✔ Non-clustered indexes on:
+- Conversion of views into physical tables
+- Surrogate keys implemented using `IDENTITY`
+- Foreign key constraints for referential integrity
+- Non-clustered indexes on:
   - `customer_key`
   - `product_key`
-  - `order_date`  
-✔ Covering index on `order_date` to optimize analytical queries  
-✔ Execution plan validation (Index Seek vs Table Scan analysis)  
-✔ Dedicated validation script for post-load testing  
+  - `order_date`
+- Covering index on `order_date` to optimize analytical queries
+- Execution plan validation (Index Seek vs Table Scan analysis)
+- Dedicated validation script for post-load testing  
 
 ---
 
 ## ⚡ Performance Engineering
 
 Query performance was analyzed using:
-
--```sql
-SET STATISTICS IO ON;
-SET STATISTICS TIME ON;
+- SET STATISTICS IO ON;
+- SET STATISTICS TIME ON;
 
 ---
 ### 🧩 Skills Gained & Demonstrated
