@@ -80,12 +80,12 @@ Unlike the reference implementation which used views, this version includes:
 
 Query performance was analyzed using:
 
-```sql
+-```sql
 SET STATISTICS IO ON;
 SET STATISTICS TIME ON;
 
 ---
-## 🧩 Skills Gained & Demonstrated
+### 🧩 Skills Gained & Demonstrated
 
 Through the design and enhancement of this SQL-Based Analytical Warehouse System, I gained hands-on experience in the following areas:
 
