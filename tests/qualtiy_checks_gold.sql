@@ -10,6 +10,7 @@ Purpose:
     - Validation of relationships in the data model for analytical purposes.
 
 Usage Notes:
+    - Run this checks after data loading
     - Investigate and resolve any discrepancies found during the checks.
 ===============================================================================
 */
